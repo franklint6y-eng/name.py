@@ -1,6 +1,6 @@
 import requests
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CopyTextButton
-from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CopyTextButton, KeyboardButton, ReplyKeyboardMarkup
+from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
 # 🔑 Replace with your token from @BotFather
 TOKEN = "8672747467:AAF4yK4E5WeQjIpqTcG86zSn3VHwrTkW2-M"
@@ -17,30 +17,38 @@ def get_random_english_name():
         return "Unknown Name"
 
 
+MAIN_KB = ReplyKeyboardMarkup(
+    [[KeyboardButton("🎲 Generate Name")]],
+    resize_keyboard=True,
+)
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
         "👋 *Welcome to the English Name Generator Bot!*\n\n"
-        "Use /name to get a random English full name.\n"
-        "Tap the name to copy it instantly!",
-        parse_mode="Markdown"
+        "Press the button below or use /name to get a random English full name.\n"
+        "Tap the copy button to copy it instantly!",
+        parse_mode="Markdown",
+        reply_markup=MAIN_KB,
     )
 
 
-async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("⏳ Generating name...")
-
+async def send_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     generated_name = get_random_english_name()
-
     keyboard = InlineKeyboardMarkup([
         [InlineKeyboardButton(f"📋 Copy: {generated_name}", copy_text=CopyTextButton(text=generated_name))]
     ])
-
     await update.message.reply_text(
-        f"✨ *Your random English name:*\n\n`{generated_name}`\n\n"
-        f"👆 Tap the name above to copy it, or use the button below:",
+        f"✨ *Your random English name:*\n\n`{generated_name}`",
         parse_mode="Markdown",
-        reply_markup=keyboard
+        reply_markup=keyboard,
     )
+
+async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await send_name(update, context)
+
+async def handle_button(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.message.text == "🎲 Generate Name":
+        await send_name(update, context)
 
 
 async def copy_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -64,5 +72,6 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("name", name))
     app.add_handler(CallbackQueryHandler(copy_callback))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button))
     print("✅ Bot is running...")
     app.run_polling()
