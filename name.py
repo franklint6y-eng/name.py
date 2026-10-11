@@ -1,5 +1,5 @@
 import requests
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CopyTextButton
 from telegram.ext import ApplicationBuilder, CommandHandler, CallbackQueryHandler, ContextTypes
 
 # 🔑 Replace with your token from @BotFather
@@ -32,7 +32,7 @@ async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     generated_name = get_random_english_name()
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton(f"📋 Copy: {generated_name}", switch_inline_query=generated_name)]
+        [InlineKeyboardButton(f"📋 Copy: {generated_name}", copy_text=CopyTextButton(text=generated_name))]
     ])
 
     await update.message.reply_text(
